@@ -14,17 +14,8 @@ on:
         required: true
   workflow_dispatch:
     inputs:
-      build-type:
-        description: 'Build type (e.g., canary, stable, beta)'
-        type: string
-        required: true
-        default: 'canary'
-      app-version:
-        description: 'App version (e.g., 0.1.0)'
-        type: string
-        required: true
       git-short-hash:
-        description: 'Git short hash'
+        description: 'Git short hash (e.g., abc1234)'
         type: string
         required: true
 
@@ -42,13 +33,13 @@ jobs:
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.app-version }}
+          app-version: ${{ inputs.app-version || inputs.git-short-hash }}
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
       - name: Build Core
         run: yarn affine @affine/web build
         env:
-          BUILD_TYPE: ${{ inputs.build-type }}
+          BUILD_TYPE: ${{ inputs.build-type || 'canary' }}
       - name: Upload web artifact
         uses: actions/upload-artifact@v4
         with:
@@ -64,13 +55,13 @@ jobs:
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.app-version }}
+          app-version: ${{ inputs.app-version || inputs.git-short-hash }}
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
       - name: Build Admin
         run: yarn affine @affine/admin build
         env:
-          BUILD_TYPE: ${{ inputs.build-type }}
+          BUILD_TYPE: ${{ inputs.build-type || 'canary' }}
       - name: Upload admin artifact
         uses: actions/upload-artifact@v4
         with:
@@ -86,13 +77,13 @@ jobs:
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.app-version }}
+          app-version: ${{ inputs.app-version || inputs.git-short-hash }}
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
       - name: Build Mobile
         run: yarn affine @affine/mobile build
         env:
-          BUILD_TYPE: ${{ inputs.build-type }}
+          BUILD_TYPE: ${{ inputs.build-type || 'canary' }}
       - name: Upload mobile artifact
         uses: actions/upload-artifact@v4
         with:
@@ -117,7 +108,7 @@ jobs:
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.app-version }}
+          app-version: ${{ inputs.app-version || inputs.git-short-hash }}
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
         with:
@@ -148,7 +139,7 @@ jobs:
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.app-version }}
+          app-version: ${{ inputs.app-version || inputs.git-short-hash }}
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
         with:
@@ -239,7 +230,7 @@ jobs:
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.app-version }}
+          app-version: ${{ inputs.app-version || inputs.git-short-hash }}
 
       - name: Build front Dockerfile
         uses: docker/build-push-action@v6
@@ -250,7 +241,7 @@ jobs:
           platforms: linux/amd64,linux/arm64
           provenance: true
           file: .github/deployment/front/Dockerfile
-          tags: ghcr.io/shrik450/affine-teto-front:${{inputs.build-type}}-${{ inputs.git-short-hash }}
+          tags: ghcr.io/shrik450/affine-teto-front:${{ inputs.git-short-hash }}
 
       - name: Build graphql Dockerfile
         uses: docker/build-push-action@v6
@@ -261,4 +252,4 @@ jobs:
           platforms: linux/amd64,linux/arm64
           provenance: true
           file: .github/deployment/node/Dockerfile
-          tags: ghcr.io/shrik450/affine-teto:${{inputs.build-type}}-${{ inputs.git-short-hash }}
+          tags: ghcr.io/shrik450/affine-teto:${{ inputs.git-short-hash }}
