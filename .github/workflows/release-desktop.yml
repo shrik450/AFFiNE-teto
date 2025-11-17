@@ -39,18 +39,10 @@ jobs:
           app-version: ${{ inputs.app-version }}
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
-      - name: Setup @sentry/cli
-        uses: ./.github/actions/setup-sentry
       - name: generate-assets
         run: yarn affine @affine/electron generate-assets
         env:
-          SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-          SENTRY_PROJECT: 'affine'
-          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-          SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-          SENTRY_RELEASE: ${{ inputs.app-version }}
           RELEASE_VERSION: ${{ inputs.app-version }}
-          MIXPANEL_TOKEN: ${{ secrets.MIXPANEL_TOKEN }}
 
       - name: Upload web artifact
         uses: actions/upload-artifact@v4
@@ -83,12 +75,6 @@ jobs:
       APPLE_PASSWORD: ${{ secrets.APPLE_PASSWORD }}
       APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
       SKIP_GENERATE_ASSETS: 1
-      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-      SENTRY_PROJECT: 'affine'
-      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-      SENTRY_RELEASE: ${{ inputs.app-version }}
-      MIXPANEL_TOKEN: ${{ secrets.MIXPANEL_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Version
@@ -208,12 +194,6 @@ jobs:
       FILES_TO_BE_SIGNED_arm64: ${{ steps.get_files_to_be_signed.outputs.FILES_TO_BE_SIGNED_arm64 }}
     env:
       SKIP_GENERATE_ASSETS: 1
-      SENTRY_ORG: ${{ secrets.SENTRY_ORG }}
-      SENTRY_PROJECT: 'affine'
-      SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
-      SENTRY_DSN: ${{ secrets.SENTRY_DSN }}
-      SENTRY_RELEASE: ${{ inputs.app-version }}
-      MIXPANEL_TOKEN: ${{ secrets.MIXPANEL_TOKEN }}
     steps:
       - uses: actions/checkout@v4
       - name: Setup Version

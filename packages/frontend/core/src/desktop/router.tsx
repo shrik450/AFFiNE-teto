@@ -1,8 +1,8 @@
-import { wrapCreateBrowserRouterV6 } from '@sentry/react';
+// NO-OP STUB: Removed Sentry router wrapper for privacy
 import { useEffect, useState } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import {
-  createBrowserRouter as reactRouterCreateBrowserRouter,
+  createBrowserRouter,
   redirect,
   useNavigate,
 } from 'react-router-dom';
@@ -182,12 +182,8 @@ export const topLevelRoutes = [
   },
 ] satisfies [RouteObject, ...RouteObject[]];
 
-const createBrowserRouter = wrapCreateBrowserRouterV6(
-  reactRouterCreateBrowserRouter
-);
-export const router = (
-  window.SENTRY_RELEASE ? createBrowserRouter : reactRouterCreateBrowserRouter
-)(topLevelRoutes, {
+// No Sentry wrapper - using standard React Router
+export const router = createBrowserRouter(topLevelRoutes, {
   basename: environment.subPath,
   future: {
     v7_normalizeFormMethod: true,

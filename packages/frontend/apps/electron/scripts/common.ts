@@ -1,9 +1,9 @@
 import { resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 
+// NO-OP STUB: Removed Sentry esbuild plugin for privacy
 import { getBuildConfig } from '@affine-tools/utils/build-config';
 import { Package } from '@affine-tools/utils/workspace';
-import { sentryEsbuildPlugin } from '@sentry/esbuild-plugin';
 import type { BuildOptions, Plugin } from 'esbuild';
 
 export const electronDir = fileURLToPath(new URL('..', import.meta.url));
@@ -40,19 +40,7 @@ export const config = (): BuildOptions => {
 
   const plugins: Plugin[] = [];
 
-  if (
-    process.env.SENTRY_AUTH_TOKEN &&
-    process.env.SENTRY_ORG &&
-    process.env.SENTRY_PROJECT
-  ) {
-    plugins.push(
-      sentryEsbuildPlugin({
-        org: process.env.SENTRY_ORG,
-        project: process.env.SENTRY_PROJECT,
-        authToken: process.env.SENTRY_AUTH_TOKEN,
-      })
-    );
-  }
+  // Removed Sentry esbuild plugin - no error reporting
 
   plugins.push({
     name: 'no-side-effects',

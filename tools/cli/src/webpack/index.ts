@@ -1,11 +1,10 @@
 import { createRequire } from 'node:module';
 import path from 'node:path';
 
+// NO-OP STUB: Removed Sentry and Perfsee plugins for privacy
 import { getBuildConfig } from '@affine-tools/utils/build-config';
 import { Path, ProjectRoot } from '@affine-tools/utils/path';
 import { Package } from '@affine-tools/utils/workspace';
-import { PerfseePlugin } from '@perfsee/webpack';
-import { sentryWebpackPlugin } from '@sentry/webpack-plugin';
 import { VanillaExtractPlugin } from '@vanilla-extract/webpack-plugin';
 import CopyPlugin from 'copy-webpack-plugin';
 import { compact, merge } from 'lodash-es';
@@ -272,17 +271,8 @@ export function createHTMLTargetConfig(
         (buildConfig.isWeb || buildConfig.isMobileWeb || buildConfig.isAdmin) &&
         process.env.R2_SECRET_ACCESS_KEY &&
         new WebpackS3Plugin(),
-      !buildConfig.debug &&
-        process.env.PERFSEE_TOKEN &&
-        new PerfseePlugin({ project: 'affine-toeverything' }),
-      process.env.SENTRY_AUTH_TOKEN &&
-        process.env.SENTRY_ORG &&
-        process.env.SENTRY_PROJECT &&
-        sentryWebpackPlugin({
-          org: process.env.SENTRY_ORG,
-          project: process.env.SENTRY_PROJECT,
-          authToken: process.env.SENTRY_AUTH_TOKEN,
-        }),
+      // Removed Perfsee plugin - no performance monitoring
+      // Removed Sentry plugin - no error reporting
       // sourcemap url like # sourceMappingURL=76-6370cd185962bc89.js.map wont load in electron
       // this is because the default file:// protocol will be ignored by Chromium
       // so we need to replace the sourceMappingURL to assets:// protocol
