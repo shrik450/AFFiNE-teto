@@ -1,11 +1,7 @@
+// NO-OP STUB: Note telemetry events replaced with empty types for privacy
+
 import type { TelemetryEvent } from './types.js';
 
-export type NoteEventType = 'NoteDisplayModeChanged';
+export type NoteEventType = string;
 
-export type NoteEvents = {
-  NoteDisplayModeChanged: TelemetryEvent & {
-    control: 'display mode';
-    type: 'note';
-  };
-  EdgelessNoteEditing: TelemetryEvent;
-};
+export type NoteEvents = Record<string, TelemetryEvent>;

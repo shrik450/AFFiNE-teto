@@ -1,83 +1,21 @@
-type OrderType = 'desc' | 'asc';
+// NO-OP STUB: Database telemetry events replaced with empty types for privacy
+
 export type WithParams<Map, T> = { [K in keyof Map]: Map[K] & T };
-export type SortParams = {
-  fieldId: string;
-  fieldType: string;
-  orderType: OrderType;
-  orderIndex: number;
-};
-export type ViewParams = {
-  viewId: string;
-  viewType: string;
-};
+
 export type DatabaseParams = {
-  blockId: string;
+  blockId?: string;
 };
 
-export type DatabaseViewEvents = {
-  DatabaseSortClear: {
-    rulesCount: number;
-  };
-  CreateDatabaseView: {
-    viewType: string; // e.g., 'table', 'gallery'
-  };
-  ChangeDatabaseLayout: {
-    fromViewType: string;
-    toViewType: string;
-  };
-};
-
-export type DatabasePropertyEvents = {
-  CreateDatabaseProperty: {
-    propertyType: string; // e.g., 'text', 'number', 'select'
-  };
-};
-
-export type DatabaseFilterEvents = {
-  CreateDatabaseFilter: {};
-};
-
-export type DatabaseGroupEvents = {
-  CreateDatabaseGroup: {
-    groupBy: string;
-  };
-};
-
-export type DatabaseEvents = {
-  AddDatabase: {};
-  AddDatabaseView: {
-    type: string;
-  };
-};
-
-export interface DatabaseAllSortEvents {
-  DatabaseSortAdd: {};
-  DatabaseSortRemove: {};
-  DatabaseSortModify: {
-    oldOrderType: OrderType;
-    oldFieldType: string;
-    oldFieldId: string;
-  };
-  DatabaseSortReorder: {
-    prevFieldType: string;
-    nextFieldType: string;
-    newOrderIndex: number;
-  };
-}
-
-export type DatabaseAllViewEvents = DatabaseViewEvents &
-  WithParams<DatabaseAllSortEvents, SortParams> &
-  DatabasePropertyEvents &
-  DatabaseFilterEvents &
-  DatabaseGroupEvents;
-
-export type DatabaseAllEvents = DatabaseEvents &
-  WithParams<DatabaseAllViewEvents, ViewParams>;
-
-export type OutDatabaseAllEvents = WithParams<
-  DatabaseAllEvents,
-  DatabaseParams
->;
+// Simplified event types - all no-op
+export type DatabaseViewEvents = Record<string, any>;
+export type DatabasePropertyEvents = Record<string, any>;
+export type DatabaseFilterEvents = Record<string, any>;
+export type DatabaseGroupEvents = Record<string, any>;
+export type DatabaseEvents = Record<string, any>;
+export type DatabaseAllSortEvents = Record<string, any>;
+export type DatabaseAllViewEvents = Record<string, any>;
+export type DatabaseAllEvents = Record<string, any>;
+export type OutDatabaseAllEvents = Record<string, any>;
 
 export type EventTraceFn<Events> = <K extends keyof Events>(
   key: K,

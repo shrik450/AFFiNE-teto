@@ -1,22 +1,10 @@
-import { mixpanel, sentry } from '@affine/track';
-import { APP_SETTINGS_STORAGE_KEY } from '@toeverything/infra/atom';
+// NO-OP STUB: Telemetry bootstrap replaced with no-op for privacy
+// All telemetry initialization has been removed
 
+import { mixpanel, sentry } from '@affine/track';
+
+// No-op: Telemetry is disabled
 mixpanel.init();
 sentry.init();
 
-if (typeof localStorage !== 'undefined') {
-  let enabled = true;
-  const settingsStr = localStorage.getItem(APP_SETTINGS_STORAGE_KEY);
-
-  if (settingsStr) {
-    const parsed = JSON.parse(settingsStr);
-    enabled = parsed.enableTelemetry;
-  }
-
-  if (!enabled) {
-    // NOTE(@forehalo): mixpanel will read local storage flag and doesn't need to be manually opt_out at startup time.
-    // see: https://docs.mixpanel.com/docs/privacy/protecting-user-data
-    // mixpanel.opt_out_tracking();
-    sentry.disable();
-  }
-}
+// No telemetry settings check needed - everything is already a no-op

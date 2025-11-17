@@ -1,3 +1,5 @@
+// NO-OP STUB: BlockSuite telemetry service replaced with no-op for privacy
+
 import { createIdentifier } from '@blocksuite/global/di';
 import type { ExtensionType } from '@blocksuite/store';
 

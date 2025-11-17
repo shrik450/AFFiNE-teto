@@ -1,3 +1,5 @@
+// NO-OP STUB: Type definitions replaced with minimal stubs for privacy
+
 import type { EventArgs, Events } from './events';
 
 type EventPropsOverride = {
@@ -7,51 +9,10 @@ type EventPropsOverride = {
   control?: string;
 };
 
-export type CallableEventsChain = {
-  [Page in keyof Events]: {
-    [Segment in keyof Events[Page]]: {
-      [Module in keyof Events[Page][Segment]]: {
-        [Event in Events[Page][Segment][Module][number]]: Event extends keyof EventArgs
-          ? (
-              // we make all args partial to simply satisfies nullish type checking
-              args?: Partial<EventArgs[Event]> & EventPropsOverride
-            ) => void
-          : (args?: EventPropsOverride) => void;
-      };
-    };
-  };
-};
+// Simplified stub - accepts any property chain
+export type CallableEventsChain = any;
 
-export type EventsUnion = {
-  [Page in keyof Events]: {
-    [Segment in keyof Events[Page]]: {
-      [Module in keyof Events[Page][Segment]]: {
-        // @ts-expect-error ignore `symbol | number` as key
-        [Event in Events[Page][Segment][Module][number]]: `${Page}.${Segment}.${Module}.${Event}`;
-      }[Events[Page][Segment][Module][number]];
-    }[keyof Events[Page][Segment]];
-  }[keyof Events[Page]];
-}[keyof Events];
-
-// page > segment > module > [events]
-type IsFourLevelsDeep<
-  T,
-  Depth extends number[] = [],
-> = Depth['length'] extends 3
-  ? T extends Array<any>
-    ? true
-    : false
-  : T extends object
-    ? {
-        [K in keyof T]: IsFourLevelsDeep<T[K], [...Depth, 0]>;
-      }[keyof T] extends true
-      ? true
-      : false
-    : false;
-
-// for type checking
-export const _assertIsAllEventsDefinedInFourLevels: IsFourLevelsDeep<Events> =
-  true;
+export type EventsUnion = string;
 
 export interface EventProps {
   // location
@@ -65,4 +26,13 @@ export interface EventProps {
   type?: string;
   category?: string;
   id?: string;
+}
+
+// Keep React module augmentation for compatibility
+declare module 'react' {
+  interface HTMLAttributes<T> {
+    'data-event-props'?: EventsUnion;
+    'data-event-arg'?: string;
+    'data-event-args-control'?: string;
+  }
 }

@@ -1,19 +1,7 @@
+// NO-OP STUB: Link telemetry events replaced with empty types for privacy
+
 import type { LinkEvent } from './types.js';
 
-export type LinkEventType =
-  | 'CopiedLink'
-  | 'OpenedAliasPopup'
-  | 'SavedAlias'
-  | 'ResetedAlias'
-  | 'OpenedViewSelector'
-  | 'SelectedView'
-  | 'OpenedCaptionEditor'
-  | 'OpenedCardStyleSelector'
-  | 'SelectedCardStyle'
-  | 'OpenedCardScaleSelector'
-  | 'SelectedCardScale'
-  | 'OpenLink'
-  | 'EditLink'
-  | 'ReloadLink';
+export type LinkEventType = string;
 
 export type LinkToolbarEvents = Record<LinkEventType, LinkEvent>;
