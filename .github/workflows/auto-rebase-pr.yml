@@ -1,0 +1,166 @@
+name: Auto Rebase Canary to Main
+
+on:
+  push:
+    branches:
+      - canary
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: write
+  pull-requests: write
+  issues: write
+
+jobs:
+  rebase-and-pr:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Fetch all branches
+        run: |
+          git fetch origin main:main
+          git fetch origin canary:canary
+
+      - name: Create rebase branch
+        id: rebase
+        run: |
+          BRANCH_NAME="auto-rebase/canary-to-main-$(date +%Y%m%d-%H%M%S)"
+          echo "branch_name=$BRANCH_NAME" >> $GITHUB_OUTPUT
+
+          git checkout -b "$BRANCH_NAME" origin/canary
+
+          # Try to rebase onto main
+          if git rebase origin/main; then
+            echo "rebase_success=true" >> $GITHUB_OUTPUT
+            echo "Rebase successful"
+          else
+            echo "rebase_success=false" >> $GITHUB_OUTPUT
+            echo "Rebase conflicts detected"
+            git rebase --abort
+          fi
+
+      - name: Push rebase branch
+        if: steps.rebase.outputs.rebase_success == 'true'
+        run: |
+          git push origin "${{ steps.rebase.outputs.branch_name }}"
+
+      - name: Call Claude AI to review changes
+        if: steps.rebase.outputs.rebase_success == 'true'
+        id: claude_review
+        run: |
+          # Generate diff summary
+          DIFF_SUMMARY=$(git diff origin/main...HEAD --stat)
+          COMMIT_COUNT=$(git rev-list --count origin/main..HEAD)
+
+          echo "diff_summary<<EOF" >> $GITHUB_OUTPUT
+          echo "$DIFF_SUMMARY" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+          echo "commit_count=$COMMIT_COUNT" >> $GITHUB_OUTPUT
+
+      - name: Create Pull Request
+        if: steps.rebase.outputs.rebase_success == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const diffSummary = `${{ steps.claude_review.outputs.diff_summary }}`;
+            const commitCount = `${{ steps.claude_review.outputs.commit_count }}`;
+
+            const pr = await github.rest.pulls.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🔄 Upstream sync: Canary → Main',
+              head: '${{ steps.rebase.outputs.branch_name }}',
+              base: 'main',
+              body: `## Automated Upstream Sync
+
+              This PR contains **${commitCount} commit(s)** from the upstream AFFiNE repository that have been synced to the \`canary\` branch and rebased onto \`main\`.
+
+              ### 📊 Changes Summary
+              \`\`\`
+              ${diffSummary}
+              \`\`\`
+
+              ### 🤖 Review Request
+              @${{ github.repository_owner }} - Please review these changes from upstream.
+
+              **Note:** The telemetry removal stubs should have automatically neutralized any new telemetry code from upstream. However, please verify:
+              - [ ] No new telemetry endpoints are being called
+              - [ ] Stub files still properly intercept tracking calls
+              - [ ] Docker builds complete successfully
+              - [ ] No sensitive data is being transmitted
+
+              ### ⚠️ Important
+              If you want Claude AI to review this PR and check for new telemetry or conflicts with our changes, comment on this PR with:
+              \`@claude please review this PR for any new telemetry or conflicts with our telemetry removal\`
+
+              ---
+              *This PR was automatically created by the auto-rebase workflow.*`,
+              draft: false
+            });
+
+            console.log('Created PR:', pr.data.html_url);
+
+            // Add label
+            await github.rest.issues.addLabels({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: pr.data.number,
+              labels: ['upstream-sync', 'automated-pr', 'needs-review']
+            });
+
+      - name: Create issue for rebase conflicts
+        if: steps.rebase.outputs.rebase_success == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '⚠️ Auto-rebase failed: Conflicts detected',
+              body: `The automatic rebase of \`canary\` onto \`main\` failed due to conflicts.
+
+              This likely means upstream AFFiNE made changes that conflict with our telemetry removal modifications.
+
+              ### Manual Resolution Required
+
+              1. **Checkout the branches:**
+                 \`\`\`bash
+                 git fetch origin
+                 git checkout -b manual-rebase-$(date +%Y%m%d) origin/canary
+                 git rebase origin/main
+                 \`\`\`
+
+              2. **Resolve conflicts:**
+                 - Check for new telemetry code in conflicted files
+                 - Ensure our stubs still intercept all tracking
+                 - Verify no new telemetry endpoints were added
+
+              3. **Request Claude AI assistance:**
+                 You can ask Claude to help resolve the conflicts by providing the conflict details.
+
+              4. **Create PR manually:**
+                 \`\`\`bash
+                 git push origin manual-rebase-$(date +%Y%m%d)
+                 \`\`\`
+                 Then create a PR from that branch to \`main\`.
+
+              ### Common Conflict Areas
+              - \`packages/frontend/track/src/*\` - Our stub files
+              - \`packages/frontend/core/src/modules/telemetry/*\` - Telemetry service
+              - \`blocksuite/affine/shared/src/services/telemetry-service/*\` - BlockSuite telemetry
+              - GitHub workflows - Build configurations
+
+              @${{ github.repository_owner }} Please resolve these conflicts.`,
+              labels: ['upstream-sync', 'conflicts', 'needs-attention', 'manual-intervention']
+            });
+            console.log('Created issue:', issue.data.html_url);
