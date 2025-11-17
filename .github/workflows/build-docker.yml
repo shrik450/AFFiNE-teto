@@ -230,7 +230,9 @@ jobs:
           platforms: linux/amd64,linux/arm64
           provenance: true
           file: .github/deployment/front/Dockerfile
-          tags: ghcr.io/shrik450/affine-teto-front:${{ inputs.image-tag }}
+          tags: |
+            ghcr.io/shrik450/affine-teto-front:${{ inputs.image-tag }}
+            ghcr.io/shrik450/affine-teto-front:latest
 
       - name: Build graphql Dockerfile
         uses: docker/build-push-action@v6
@@ -241,4 +243,6 @@ jobs:
           platforms: linux/amd64,linux/arm64
           provenance: true
           file: .github/deployment/node/Dockerfile
-          tags: ghcr.io/shrik450/affine-teto:${{ inputs.image-tag }}
+          tags: |
+            ghcr.io/shrik450/affine-teto:${{ inputs.image-tag }}
+            ghcr.io/shrik450/affine-teto:latest
