@@ -1,12 +1,15 @@
 name: Build Images
 
 on:
+  push:
+    branches:
+      - main
   workflow_dispatch:
     inputs:
       image-tag:
         description: 'Docker image tag (e.g., abc1234 or v1.0.0)'
         type: string
-        required: true
+        required: false
 
 permissions:
   contents: 'write'
@@ -14,15 +17,36 @@ permissions:
   packages: 'write'
 
 jobs:
+  get-version:
+    name: Get Version
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Extract version from package.json
+        id: version
+        run: |
+          if [ -n "${{ inputs.image-tag }}" ]; then
+            echo "version=${{ inputs.image-tag }}" >> $GITHUB_OUTPUT
+          else
+            VERSION=$(jq -r '.version' package.json)
+            echo "version=v${VERSION}" >> $GITHUB_OUTPUT
+          fi
+      - name: Display version
+        run: echo "Using version ${{ steps.version.outputs.version }}"
+
   build-web:
     name: Build @affine/web
     runs-on: ubuntu-latest
+    needs:
+      - get-version
     steps:
       - uses: actions/checkout@v4
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.image-tag }}
+          app-version: ${{ needs.get-version.outputs.version }}
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
       - name: Build Core
@@ -39,12 +63,14 @@ jobs:
   build-admin:
     name: Build @affine/admin
     runs-on: ubuntu-latest
+    needs:
+      - get-version
     steps:
       - uses: actions/checkout@v4
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.image-tag }}
+          app-version: ${{ needs.get-version.outputs.version }}
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
       - name: Build Admin
@@ -61,12 +87,14 @@ jobs:
   build-mobile:
     name: Build @affine/mobile
     runs-on: ubuntu-latest
+    needs:
+      - get-version
     steps:
       - uses: actions/checkout@v4
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.image-tag }}
+          app-version: ${{ needs.get-version.outputs.version }}
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
       - name: Build Mobile
@@ -83,6 +111,8 @@ jobs:
   build-server-native:
     name: Build Server native - ${{ matrix.targets.name }}
     runs-on: ubuntu-latest
+    needs:
+      - get-version
     strategy:
       fail-fast: false
       matrix:
@@ -97,7 +127,7 @@ jobs:
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.image-tag }}
+          app-version: ${{ needs.get-version.outputs.version }}
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
         with:
@@ -122,13 +152,14 @@ jobs:
     name: Build Server
     runs-on: ubuntu-latest
     needs:
+      - get-version
       - build-server-native
     steps:
       - uses: actions/checkout@v4
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.image-tag }}
+          app-version: ${{ needs.get-version.outputs.version }}
       - name: Setup Node.js
         uses: ./.github/actions/setup-node
         with:
@@ -157,6 +188,7 @@ jobs:
     name: Build Images
     runs-on: ubuntu-latest
     needs:
+      - get-version
       - build-server
       - build-web
       - build-mobile
@@ -219,7 +251,7 @@ jobs:
       - name: Setup Version
         uses: ./.github/actions/setup-version
         with:
-          app-version: ${{ inputs.image-tag }}
+          app-version: ${{ needs.get-version.outputs.version }}
 
       - name: Build front Dockerfile
         uses: docker/build-push-action@v6
@@ -231,7 +263,7 @@ jobs:
           provenance: true
           file: .github/deployment/front/Dockerfile
           tags: |
-            ghcr.io/shrik450/affine-teto-front:${{ inputs.image-tag }}
+            ghcr.io/shrik450/affine-teto-front:${{ needs.get-version.outputs.version }}
             ghcr.io/shrik450/affine-teto-front:latest
 
       - name: Build graphql Dockerfile
@@ -244,5 +276,5 @@ jobs:
           provenance: true
           file: .github/deployment/node/Dockerfile
           tags: |
-            ghcr.io/shrik450/affine-teto:${{ inputs.image-tag }}
+            ghcr.io/shrik450/affine-teto:${{ needs.get-version.outputs.version }}
             ghcr.io/shrik450/affine-teto:latest
