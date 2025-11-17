@@ -1,4 +1,4 @@
-# AFFiNE Telemetry Removal Implementation Plan
+# AFFiNE Self-hosted server Telemetry Removal Implementation Plan
 
 **Strategy:** Minimal-conflict approach using stub replacements
 **Goal:** Remove all automatic telemetry while maintaining upstream merge compatibility
@@ -16,6 +16,11 @@ This approach means:
 - ✅ Telemetry calls become no-ops without code changes
 - ✅ New upstream features work, their telemetry is automatically neutralized
 - ⚠️ Need to update stubs if upstream adds new telemetry exports
+
+## Implementation Notes
+
+- Each phase should have a single commit
+- The goal here is to ONLY remove telemetry from the server and frontend, so that if you self-host and use the web UI there should be NO telemetry from either the backend or the frontend. Since app distribution is more complicated, that is not in scope for this change.
 
 ---
 
@@ -86,16 +91,6 @@ This approach means:
   - [ ] Modify `/packages/frontend/core/src/mobile/router.tsx`
     - Remove `wrapCreateBrowserRouterV6` from Sentry
 
-### 2.2 Sentry Electron
-**Impact:** Removes error reporting from desktop app
-
-- [ ] **Remove Sentry from Electron**
-  - [ ] Modify `/packages/frontend/apps/electron/src/main/index.ts`
-    - Delete Sentry initialization (lines 110-125)
-  - [ ] Modify `/packages/frontend/apps/electron/src/preload/bootstrap.ts`
-    - Remove Sentry import
-  - [ ] Remove `@sentry/electron` dependency
-
 ### 2.3 Source Map Uploads
 **Impact:** Stops uploading source maps to Sentry
 
@@ -128,133 +123,10 @@ This approach means:
 
 ---
 
-## Phase 3: Backend Monitoring
+## Phase 3: Update Documentation
 
-### 3.1 OpenTelemetry
-**Impact:** Removes backend metrics and tracing (already disabled by default)
 
-- [ ] **Delete OpenTelemetry module**
-  - [ ] Delete `/packages/backend/server/src/base/metrics/` directory
-  - [ ] Delete `/packages/backend/server/src/plugins/gcloud/metrics.ts`
-  - [ ] Remove OpenTelemetry dependencies from backend package.json:
-    - [ ] `@opentelemetry/api`
-    - [ ] `@opentelemetry/sdk-node`
-    - [ ] `@opentelemetry/exporter-prometheus`
-    - [ ] `@opentelemetry/exporter-zipkin`
-    - [ ] `@google-cloud/opentelemetry-cloud-trace-exporter`
-    - [ ] `@opentelemetry/host-metrics`
-    - [ ] All `@opentelemetry/instrumentation-*` packages
-  - [ ] Remove metrics module registration from backend bootstrap
-
-### 3.2 Customer.io
-**Impact:** Removes user lifecycle tracking (already disabled by default)
-
-- [ ] **Delete Customer.io plugin**
-  - [ ] Delete `/packages/backend/server/src/plugins/customerio/` directory
-  - [ ] Remove customer.io event listeners from user service
-  - [ ] Remove customer.io module registration
-
----
-
-## Phase 4: Mobile Platform Telemetry
-
-### 4.1 Firebase (Android)
-**Impact:** Removes Android crash reporting and analytics
-
-- [ ] **Remove Firebase Crashlytics**
-  - [ ] Delete `/packages/frontend/apps/android/App/app/src/main/java/app/affine/pro/utils/logger/CrashlyticsTree.kt`
-  - [ ] Modify `/packages/frontend/apps/android/App/app/src/main/java/app/affine/pro/AFFiNEApp.kt`
-    - Remove Firebase initialization
-    - Remove Crashlytics custom keys
-  - [ ] Modify `/packages/frontend/apps/android/App/app/build.gradle`
-    - Remove `firebase.crashlytics` plugin
-    - Remove Firebase dependencies
-  - [ ] Delete `google-services.json` (if exists)
-
-### 4.2 App Tracking Transparency (iOS)
-**Impact:** Removes tracking permission request on iOS
-
-- [ ] **Remove ATT**
-  - [ ] Modify `/packages/frontend/apps/ios/src/app.tsx`
-    - Remove `AppTrackingTransparency.requestPermission()` call
-  - [ ] Remove `@capacitor-community/app-tracking-transparency` dependency
-
----
-
-## Phase 5: Auto-Update Mechanism
-
-### 5.1 Disable Auto-Update Checks
-**Impact:** Stops automatic version checks to affine.pro
-
-**Option A: Disable by default (keep functionality)**
-- [ ] **Change update defaults**
-  - [ ] Find update settings defaults
-  - [ ] Set `autoCheckUpdate: false` as default
-  - [ ] Set `autoDownloadUpdate: false` as default
-
-**Option B: Complete removal (breaks update functionality)**
-- [ ] **Delete auto-updater**
-  - [ ] Delete `/packages/frontend/apps/electron/src/main/updater/` directory
-  - [ ] Remove `electron-updater` dependency
-  - [ ] Remove update UI components
-  - [ ] Remove update-related event handlers
-
----
-
-## Phase 6: Build Configuration & Environment
-
-### 6.1 Remove Telemetry Environment Variables
-**Impact:** Clean up build configuration
-
-- [ ] **Update build config**
-  - [ ] Modify `/tools/utils/src/build-config.ts`
-    - Remove `SENTRY_DSN` variable
-    - Remove `MIXPANEL_TOKEN` variable
-    - Remove `PERFSEE_TOKEN` variable
-  - [ ] Update `.env.example` files (if they exist)
-    - Remove telemetry-related examples
-
-### 6.2 Remove Telemetry Settings
-**Impact:** Remove user-facing telemetry toggle
-
-- [ ] **Clean up settings**
-  - [ ] Modify `/packages/common/infra/src/atom/settings.ts`
-    - Remove `enableTelemetry` setting
-  - [ ] Remove telemetry toggle from About settings page
-    - Find and modify: `/packages/frontend/core/src/desktop/dialogs/setting/general-setting/about/index.tsx`
-
----
-
-## Phase 7: Optional Services (Uncheck if you want to keep these)
-
-### 7.1 CAPTCHA Service
-**Impact:** Removes anti-bot protection (may need alternative)
-
-- [ ] **Remove Cloudflare Turnstile**
-  - [ ] Delete `/packages/frontend/core/src/components/sign-in/captcha.tsx`
-  - [ ] Delete `/packages/backend/server/src/plugins/captcha/` directory
-  - [ ] Remove `@marsidev/react-turnstile` dependency
-  - [ ] Remove CAPTCHA from auth flows
-
-### 7.2 External Link Preview
-**Impact:** Stops fetching metadata for pasted URLs
-
-- [ ] **Remove link preview service**
-  - [ ] Delete `/packages/frontend/core/src/blocksuite/view-extensions/link-preview-service/` directory
-  - [ ] Remove link preview API endpoint
-
-### 7.3 Image Proxy
-**Impact:** External images won't be proxied (CORS issues may occur)
-
-- [ ] **Remove image proxy**
-  - [ ] Remove image proxy API endpoint
-  - [ ] Update image handling to load directly
-
----
-
-## Phase 8: Documentation & Cleanup
-
-### 8.1 Update Documentation
+### 3.1 Update Documentation
 **Impact:** Reflect privacy changes in docs
 
 - [ ] **Update README/docs**
@@ -262,7 +134,7 @@ This approach means:
   - [ ] Update privacy policy/documentation
   - [ ] Add note about self-hosted privacy guarantees
 
-### 8.2 Dependency Cleanup
+### 3.2 Dependency Cleanup
 **Impact:** Reduce bundle size
 
 - [ ] **Clean up package.json files**
@@ -270,7 +142,7 @@ This approach means:
   - [ ] Verify all telemetry packages are removed
   - [ ] Update lockfiles
 
-### 8.3 Type Checking
+### 3.3 Type Checking
 **Impact:** Fix TypeScript errors from removed modules
 
 - [ ] **Fix type errors**
@@ -358,17 +230,6 @@ When AFFiNE upstream adds new features:
 2. Merge conflicts only occur in stub files or if they restructure telemetry
 3. Periodically review upstream telemetry changes and update stubs if needed
 
-### Priority Order
-
-If doing this incrementally, implement in this order:
-1. **Phase 1 & 2** (Frontend analytics and Sentry) - Highest impact
-2. **Phase 3** (Backend monitoring) - Already disabled by default
-3. **Phase 4** (Mobile telemetry) - If you build mobile apps
-4. **Phase 5** (Auto-updates) - Medium impact
-5. **Phase 6** (Config cleanup) - Low impact
-6. **Phase 7** (Optional) - Only if desired
-7. **Phase 8** (Documentation) - Final cleanup
-
 ---
 
 ## Rollback Plan
@@ -378,20 +239,3 @@ If issues occur:
 2. Can restore by reverting stub files
 3. Upstream AFFiNE still has full telemetry if needed for reference
 
----
-
-## Estimated Scope
-
-- **Files to modify:** ~30-50 files
-- **Files to delete:** ~40-60 files
-- **Dependencies to remove:** ~30 packages
-- **Lines of code changed:** ~200-300 lines (mostly deletions/stubs)
-- **Merge conflict risk:** LOW (business logic unchanged)
-
----
-
-**Checklist Instructions:**
-1. Review each section
-2. Uncheck items you don't want to implement
-3. Save this file with your selections
-4. Provide it back with instructions to implement checked items
