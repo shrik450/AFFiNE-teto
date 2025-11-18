@@ -19,7 +19,9 @@ export type Flag<F extends FlagInfo = FlagInfo> = {
 } & F;
 
 export class Flags extends Entity {
-  private readonly globalState = this.globalStateService.globalState;
+  private get globalState() {
+    return this.globalStateService.globalState;
+  }
 
   constructor(private readonly globalStateService: GlobalStateService) {
     super();

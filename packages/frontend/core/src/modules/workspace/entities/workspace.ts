@@ -10,22 +10,31 @@ import type { WorkspaceScope } from '../scopes/workspace';
 import { WorkspaceEngineService } from '../services/engine';
 
 export class Workspace extends Entity {
+  readonly rootYDoc: YDoc;
+
   constructor(
     public readonly scope: WorkspaceScope,
     public readonly featureFlagService: FeatureFlagService
   ) {
     super();
+    this.rootYDoc = new YDoc({ guid: this.scope.props.openOptions.metadata.id });
   }
 
-  readonly id = this.scope.props.openOptions.metadata.id;
+  get id() {
+    return this.scope.props.openOptions.metadata.id;
+  }
 
-  readonly openOptions = this.scope.props.openOptions;
+  get openOptions() {
+    return this.scope.props.openOptions;
+  }
 
-  readonly meta = this.scope.props.openOptions.metadata;
+  get meta() {
+    return this.scope.props.openOptions.metadata;
+  }
 
-  readonly flavour = this.meta.flavour;
-
-  readonly rootYDoc = new YDoc({ guid: this.openOptions.metadata.id });
+  get flavour() {
+    return this.meta.flavour;
+  }
 
   _docCollection: WorkspaceInterface | null = null;
 

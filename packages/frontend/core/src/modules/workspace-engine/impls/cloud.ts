@@ -102,7 +102,9 @@ class CloudWorkspaceFlavourProvider implements WorkspaceFlavourProvider {
     );
   }
 
-  readonly flavour = this.server.id;
+  get flavour() {
+    return this.server.id;
+  }
 
   DocStorageType =
     BUILD_CONFIG.isElectron || BUILD_CONFIG.isIOS || BUILD_CONFIG.isAndroid

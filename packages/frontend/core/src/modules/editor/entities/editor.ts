@@ -34,9 +34,12 @@ export class Editor extends Entity {
 
   readonly mode$ = new LiveData<DocMode>('page');
   readonly selector$ = new LiveData<EditorSelector | undefined>(undefined);
-  readonly doc = this.docService.doc;
-  readonly isSharedMode =
-    this.workspaceService.workspace.openOptions.isSharedMode;
+  get doc() {
+    return this.docService.doc;
+  }
+  get isSharedMode() {
+    return this.workspaceService.workspace.openOptions.isSharedMode;
+  }
   readonly editorContainer$ = new LiveData<AffineEditorContainer | null>(null);
   readonly defaultOpenProperty$ = new LiveData<DefaultOpenProperty | undefined>(
     undefined
