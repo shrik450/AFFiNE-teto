@@ -26,19 +26,38 @@ type ServerFeatureRecord = {
 export class Server extends Entity<{
   serverMetadata: ServerMetadata;
 }> {
-  readonly id = this.props.serverMetadata.id;
-  readonly baseUrl = this.props.serverMetadata.baseUrl;
-  readonly scope = this.framework.createScope(ServerScope, {
-    server: this as Server,
-  });
+  private _scope?: ServerScope;
 
-  readonly serverConfigStore = this.scope.framework.get(ServerConfigStore);
-  readonly fetch = this.scope.framework.get(FetchService).fetch;
-  readonly gql = this.scope.framework.get(GraphQLService).gql;
+  get id() {
+    return this.props.serverMetadata.id;
+  }
+  get baseUrl() {
+    return this.props.serverMetadata.baseUrl;
+  }
+  get scope() {
+    if (!this._scope) {
+      this._scope = this.framework.createScope(ServerScope, {
+        server: this as Server,
+      });
+    }
+    return this._scope;
+  }
+
+  get serverConfigStore() {
+    return this.scope.framework.get(ServerConfigStore);
+  }
+  get fetch() {
+    return this.scope.framework.get(FetchService).fetch;
+  }
+  get gql() {
+    return this.scope.framework.get(GraphQLService).gql;
+  }
   get account$() {
     return this.scope.framework.get(AuthService).session.account$;
   }
-  readonly serverMetadata = this.props.serverMetadata;
+  get serverMetadata() {
+    return this.props.serverMetadata;
+  }
 
   constructor(private readonly serverListStore: ServerListStore) {
     super();
@@ -112,7 +131,9 @@ export class Server extends Entity<{
   }
 
   override dispose(): void {
-    this.scope.dispose();
+    if (this._scope) {
+      this._scope.dispose();
+    }
     this.revalidateConfig.unsubscribe();
   }
 }
