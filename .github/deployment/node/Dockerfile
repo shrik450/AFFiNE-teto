@@ -13,4 +13,7 @@ RUN apt-get update && \
 # Enable jemalloc by preloading the library
 ENV LD_PRELOAD=libjemalloc.so.2
 
+# Set deployment type to selfhosted by default
+ENV DEPLOYMENT_TYPE=selfhosted
+
 CMD ["node", "./dist/main.js"]
