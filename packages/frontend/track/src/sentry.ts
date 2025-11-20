@@ -1,53 +1,36 @@
-import * as Sentry from '@sentry/react';
-import { useEffect } from 'react';
-import {
-  createRoutesFromChildren,
-  matchRoutes,
-  useLocation,
-  useNavigationType,
-} from 'react-router-dom';
+import type { ComponentType, ReactNode } from 'react';
 
 function createSentry() {
-  let client: Sentry.BrowserClient | undefined;
-  const wrapped = {
-    init() {
-      if (!globalThis.SENTRY_RELEASE) {
-        // https://docs.sentry.io/platforms/javascript/guides/react/#configure
-        client = Sentry.init({
-          dsn: BUILD_CONFIG.SENTRY_DSN,
-          debug: BUILD_CONFIG.debug ?? false,
-          environment: BUILD_CONFIG.appBuildType,
-          integrations: [
-            Sentry.reactRouterV6BrowserTracingIntegration({
-              useEffect,
-              useLocation,
-              useNavigationType,
-              createRoutesFromChildren,
-              matchRoutes,
-            }),
-          ],
-        }) as Sentry.BrowserClient;
-
-        Sentry.setTags({
-          distribution: BUILD_CONFIG.distribution,
-          appVersion: BUILD_CONFIG.appVersion,
-          editorVersion: BUILD_CONFIG.editorVersion,
-        });
-      }
-    },
-    enable() {
-      if (client) {
-        client.getOptions().enabled = true;
-      }
-    },
-    disable() {
-      if (client) {
-        client.getOptions().enabled = false;
-      }
-    },
+  return {
+    init() {},
+    enable() {},
+    disable() {},
   };
-
-  return wrapped;
 }
 
 export const sentry = createSentry();
+
+export const captureException = (
+  _error: unknown,
+  _context?: Record<string, unknown>
+) => {};
+
+export const logger = {
+  error: (..._args: unknown[]) => {},
+  warn: (..._args: unknown[]) => {},
+  info: (..._args: unknown[]) => {},
+  log: (..._args: unknown[]) => {},
+};
+
+export const wrapCreateBrowserRouterV6 = <T>(createRouter: T): T =>
+  createRouter;
+
+export const withSentryReactRouterV7Routing = <T extends ComponentType<any>>(
+  Routes: T
+): T => Routes;
+
+export type FallbackRender = (props: {
+  error: Error;
+  componentStack?: string;
+  resetError: () => void;
+}) => ReactNode;

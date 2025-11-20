@@ -1,6 +1,6 @@
 import { Toaster } from '@affine/admin/components/ui/sonner';
 import { lazy, ROUTES } from '@affine/routes';
-import { withSentryReactRouterV7Routing } from '@sentry/react';
+import { withSentryReactRouterV7Routing } from '@affine/track';
 import { useEffect } from 'react';
 import {
   BrowserRouter,

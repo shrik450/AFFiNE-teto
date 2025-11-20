@@ -1,6 +1,6 @@
-import { ErrorBoundary, type FallbackRender } from '@sentry/react';
-import type { FC, PropsWithChildren } from 'react';
-import { useCallback } from 'react';
+import { type FallbackRender } from '@affine/track';
+import type { FC, PropsWithChildren, ReactNode } from 'react';
+import { Component, useCallback } from 'react';
 
 import { AffineErrorFallback } from './affine-error-fallback';
 
@@ -11,9 +11,47 @@ export interface AffineErrorBoundaryProps extends PropsWithChildren {
   className?: string;
 }
 
-/**
- * TODO(@eyhn): Unify with SWRErrorBoundary
- */
+interface ErrorBoundaryState {
+  hasError: boolean;
+  error: Error | null;
+}
+
+class ReactErrorBoundary extends Component<
+  {
+    children: ReactNode;
+    fallback: FallbackRender;
+    onError?: (error: Error, componentStack?: string) => void;
+  },
+  ErrorBoundaryState
+> {
+  constructor(props: any) {
+    super(props);
+    this.state = { hasError: false, error: null };
+  }
+
+  static getDerivedStateFromError(error: Error): ErrorBoundaryState {
+    return { hasError: true, error };
+  }
+
+  componentDidCatch(error: Error, errorInfo: React.ErrorInfo) {
+    this.props.onError?.(error, errorInfo.componentStack ?? undefined);
+  }
+
+  resetError = () => {
+    this.setState({ hasError: false, error: null });
+  };
+
+  render() {
+    if (this.state.hasError && this.state.error) {
+      return this.props.fallback({
+        error: this.state.error,
+        resetError: this.resetError,
+      });
+    }
+    return this.props.children;
+  }
+}
+
 export const AffineErrorBoundary: FC<AffineErrorBoundaryProps> = props => {
   const fallbackRender: FallbackRender = useCallback(
     fallbackProps => {
@@ -33,8 +71,8 @@ export const AffineErrorBoundary: FC<AffineErrorBoundaryProps> = props => {
   }, []);
 
   return (
-    <ErrorBoundary fallback={fallbackRender} onError={onError}>
+    <ReactErrorBoundary fallback={fallbackRender} onError={onError}>
       {props.children}
-    </ErrorBoundary>
+    </ReactErrorBoundary>
   );
 };

@@ -1,5 +1,5 @@
 import { NavigateContext } from '@affine/core/components/hooks/use-navigate-helper';
-import { wrapCreateBrowserRouterV6 } from '@sentry/react';
+import { wrapCreateBrowserRouterV6 } from '@affine/track';
 import { useEffect, useState } from 'react';
 import type { RouteObject } from 'react-router-dom';
 import {

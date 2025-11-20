@@ -1237,6 +1237,7 @@ export const PackageList = [
       'packages/common/error',
       'packages/common/graphql',
       'packages/frontend/routes',
+      'packages/frontend/track',
       'packages/common/infra',
     ],
   },

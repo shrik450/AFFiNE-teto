@@ -98,7 +98,6 @@
     "jsonwebtoken": "^9.0.2",
     "keyv": "^5.2.2",
     "lodash-es": "^4.17.21",
-    "mixpanel": "^0.18.0",
     "mustache": "^4.2.0",
     "nanoid": "^5.0.9",
     "nest-commander": "^3.15.0",
@@ -137,7 +136,6 @@
     "@types/http-errors": "^2.0.4",
     "@types/jsonwebtoken": "^9.0.9",
     "@types/lodash-es": "^4.17.12",
-    "@types/mixpanel": "^2.14.9",
     "@types/mustache": "^4.2.5",
     "@types/node": "^22.0.0",
     "@types/nodemailer": "^6.4.17",
@@ -156,7 +154,7 @@
     "why-is-node-running": "^3.2.2"
   },
   "nodemonConfig": {
-    "exec": "node",
+    "exec": "node --import tsx",
     "ignore": [
       "**/__tests__/**",
       "**/dist/**",

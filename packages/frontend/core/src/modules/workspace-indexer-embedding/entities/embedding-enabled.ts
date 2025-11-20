@@ -1,5 +1,5 @@
 import type { WorkspaceService } from '@affine/core/modules/workspace';
-import { logger } from '@sentry/react';
+import { logger } from '@affine/track';
 import {
   catchErrorInto,
   effect,

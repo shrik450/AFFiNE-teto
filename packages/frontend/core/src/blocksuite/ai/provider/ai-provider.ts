@@ -1,5 +1,5 @@
+import { captureException } from '@affine/track';
 import type { EditorHost } from '@blocksuite/affine/std';
-import { captureException } from '@sentry/react';
 import { BehaviorSubject, Subject } from 'rxjs';
 
 import type { ChatContextValue } from '../components/ai-chat-content';
