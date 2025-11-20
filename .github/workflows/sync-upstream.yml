@@ -1,0 +1,75 @@
+name: Sync Upstream to Canary
+
+on:
+  schedule:
+    # Run every Monday at 00:00 UTC
+    - cron: '0 0 * * 1'
+  workflow_dispatch: # Allow manual triggering
+
+permissions:
+  contents: write
+
+jobs:
+  sync-upstream:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          ref: canary
+          fetch-depth: 0
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/toeverything/AFFiNE.git || true
+          git fetch upstream
+
+      - name: Merge upstream canary
+        id: merge
+        run: |
+          # Try to merge upstream/canary into our canary branch
+          if git merge upstream/canary --no-edit; then
+            echo "merge_success=true" >> $GITHUB_OUTPUT
+            echo "Merge successful"
+          else
+            echo "merge_success=false" >> $GITHUB_OUTPUT
+            echo "Merge conflicts detected"
+            git merge --abort
+          fi
+
+      - name: Push to canary
+        if: steps.merge.outputs.merge_success == 'true'
+        run: |
+          git push origin canary
+
+      - name: Create issue for merge conflicts
+        if: steps.merge.outputs.merge_success == 'false'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '⚠️ Upstream sync failed: Merge conflicts detected',
+              body: `The weekly upstream sync to the \`canary\` branch failed due to merge conflicts.
+
+              Please manually resolve the conflicts:
+
+              \`\`\`bash
+              git checkout canary
+              git fetch upstream
+              git merge upstream/canary
+              # Resolve conflicts
+              git push origin canary
+              \`\`\`
+
+              After resolving conflicts, the auto-rebase workflow will attempt to create a PR to main.`,
+              labels: ['upstream-sync', 'needs-attention']
+            });
+            console.log('Created issue:', issue.data.html_url);
